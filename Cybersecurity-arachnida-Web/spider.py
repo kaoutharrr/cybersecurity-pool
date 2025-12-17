@@ -88,6 +88,7 @@ def main():
     parser.add_argument("-r", action="store_true", help="Recursive download")
     parser.add_argument("-l", type=int, default=5, help="Max depth level (default: 5)")
     parser.add_argument("-p", default="./data/", help="Download path")
+    parser.add_argument("-v", action="store_true", help="Verbose output")
     
     args = parser.parse_args()
     
