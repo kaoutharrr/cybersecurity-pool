@@ -1,7 +1,7 @@
 import argparse
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 import os
 
 def parse_arguments():
@@ -55,10 +55,39 @@ def download_imgs(img_urls, save_path):
         except Exception as e:
             print(f"Failed to download {url}: {e}")
 
+def get_links(html_text, base_url):
+
+    soup = BeautifulSoup(html_text, 'html.parser')
+    links = []
+    for a in soup.find_all('a', href=True):
+        full_url = urljoin(base_url, a['href'])
+        if urlparse(full_url).netloc == urlparse(base_url).netloc:
+            links.append(full_url)
+    return links
+
+visited = set()
+def spider(url, current_level, max_level, save_path, recursive):
+    
+    if url in visited or current_level > max_level:
+        return
+    visited.add(url)
+    print(f"Level {current_level}: Processing {url}")
+
+    html_content = get_html(url)
+    if html_content:
+        imgs_urls = parse_html(html_content, url)
+        download_imgs(imgs_urls, save_path)
+    
+        if recursive and current_level < max_level:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            for a in soup.find_all('a', href=True):
+                next_url= urljoin(url, a['href'])
+                if urlparse(next_url).netloc == urlparse(url).netloc:
+                    spider(next_url, current_level + 1, max_level, save_path, recursive)
 
 
+def main():
+    args = parse_arguments()
+    spider(args.url, 0, args.l, args.p, args.r)
 
-args = parse_arguments()
-html_xontent = get_html(args.url)
-img_urls = parse_html(html_xontent, args.url)
-download_imgs(img_urls, args.p)
+main()
