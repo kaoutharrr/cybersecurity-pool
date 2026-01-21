@@ -1,0 +1,48 @@
+import argparse
+from PIL import Image
+from PIL.ExifTags import TAGS
+import os
+import time
+
+
+def parse_arguments():
+
+    parser = argparse.ArgumentParser(prog='scorpion')
+    parser.add_argument("files", nargs="+", help="Image files to analyze")
+    return parser.parse_args()
+
+def extract_metadata(file_path):
+    try:
+        stats = os.stat(file_path)
+        
+        with Image.open(file_path) as img :
+            print(f"\n--- Metadata for: {file_path} ---")
+            print(f"Format: {img.format}")
+            print(f"Mode: {img.mode}")
+            print(f"Size: {img.size[0]}x{img.size[1]} px")
+            print(f"Creation Date (System): {time.ctime(stats.st_ctime)}")
+            print(f"Last Modified (System): {time.ctime(stats.st_mtime)}")
+            exif_data = img._getexif()
+            if exif_data is None:
+                print("No EXIF metadata found.")
+            else:
+                for tag_id, value in exif_data.items():
+                    tag = TAGS.get(tag_id, tag_id)
+                    print(f"{tag:25}: {value}")
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+    
+def main():
+    """
+    Main execution logic for Scorpion.
+    """
+    # Step 1: Get the list of files from the command line
+    args = parse_arguments()
+    for file_path in args.files:
+        if os.path.exists(file_path):
+            extract_metadata(file_path)
+        else:
+            print(f"Error: File '{file_path}' not found.")
+
+if __name__ == "__main__":
+    main()
